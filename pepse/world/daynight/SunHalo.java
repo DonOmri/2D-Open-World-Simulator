@@ -1,2 +1,4 @@
-package pepse.world.daynight;public class SunHalo {
+package pepse.world.daynight;
+
+public class SunHalo {
 }

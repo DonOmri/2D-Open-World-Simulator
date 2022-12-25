@@ -1,2 +1,4 @@
-package pepse.world.daynight;public class Night {
+package pepse.world.daynight;
+
+public class Night {
 }

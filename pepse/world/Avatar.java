@@ -1,2 +1,4 @@
-package pepse.world;public class Avatar {
+package pepse.world;
+
+public class Avatar {
 }

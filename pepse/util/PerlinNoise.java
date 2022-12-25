@@ -10,6 +10,7 @@ public class PerlinNoise {
 
     public PerlinNoise(double seed) {
         this.seed = seed;
+        System.out.println("seed in perlin: " + seed);
         init();
     }
 

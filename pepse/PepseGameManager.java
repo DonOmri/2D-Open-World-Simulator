@@ -14,6 +14,7 @@ import pepse.world.Terrain;
 import pepse.world.daynight.Night;
 import pepse.world.daynight.Sun;
 import pepse.world.daynight.SunHalo;
+import pepse.world.trees.Tree;
 
 import java.awt.*;
 import java.util.Random;
@@ -66,8 +67,8 @@ public class PepseGameManager extends GameManager {
         Night.create(gameObjects(),windowController.getWindowDimensions(), Layer.FOREGROUND,30);
         GameObject sun = Sun.create(gameObjects(),BACKGROUND+2, windowController.getWindowDimensions(), 60);
         GameObject sunHalo = SunHalo.create(gameObjects(),BACKGROUND+1, sun, new Color(255, 255, 0, 20));
-        sunHalo.addComponent(x -> sunHalo.setCenter(sun.getCenter())); //todo remember to test if halo is updating with sun
-
-
+        sunHalo.addComponent(x -> sunHalo.setCenter(sun.getCenter()));
+        Tree newTrees = new Tree(newTerrain, gameObjects(), groundLayer, windowController.getWindowDimensions(),seed);
+        newTrees.createInRange(0,(int) windowController.getWindowDimensions().x());
     }
 }

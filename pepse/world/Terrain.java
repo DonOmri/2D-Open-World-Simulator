@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 public class Terrain {
     private static final float TERRAIN_ADJUSTER = 2f/3;
-    private static final int MIN_GROUND_HEIGHT = 90;
+    private static final int MIN_GROUND_HEIGHT = 150;
     private static final Color BASE_GROUND_COLOR = new Color(212, 123, 74);
     private final GameObjectCollection gameObjects;
     private final int groundLayer;
@@ -32,10 +32,8 @@ public class Terrain {
         this.groundLayer = groundLayer;
         this.windowDimensions = windowDimensions;
         this.groundHeightAtX0 = this.windowDimensions.y() * TERRAIN_ADJUSTER;
-
         this.perlinNoise = new PerlinNoise(seed);
-        this.heightFunc = x -> 700 - 2000 * perlinNoise.noise(x/90);
-        System.out.println("seed in terrain: " + seed);
+        this.heightFunc = x -> 350 - 1000 * perlinNoise.noise(x/90);
     }
 
     /**
@@ -47,6 +45,7 @@ public class Terrain {
         double initialGroundHeight = heightFunc.apply(x); //use perlin noise to determine basic height
         initialGroundHeight = Math.min(Math.floor(initialGroundHeight / Block.SIZE) * Block.SIZE,
                 windowDimensions.y() - MIN_GROUND_HEIGHT);
+//        initialGroundHeight = Math.max(initialGroundHeight,390);
         return (float) initialGroundHeight;
     }
 

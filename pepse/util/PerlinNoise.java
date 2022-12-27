@@ -10,7 +10,6 @@ public class PerlinNoise {
 
     public PerlinNoise(double seed) {
         this.seed = seed;
-        System.out.println("seed in perlin: " + seed);
         init();
     }
 
@@ -48,53 +47,6 @@ public class PerlinNoise {
         for (int i = 0; i < 256; i++) {
             p[256 + i] = p[i] = permutation[i];
         }
-
-    }
-
-    public void setSeed(double seed) {
-        this.seed = seed;
-    }
-
-    public double getSeed() {
-        return this.seed;
-    }
-
-    public double noise(double x, double y, double z, int size) {
-        double value = 0.0;
-        double initialSize = size;
-
-        while (size >= 1) {
-            value += smoothNoise((x / size), (y / size), (z / size)) * size;
-            size /= 2.0;
-        }
-
-        return value / initialSize;
-    }
-
-    public double noise(double x, double y, double z) {
-        double value = 0.0;
-        double size = default_size;
-        double initialSize = size;
-
-        while (size >= 1) {
-            value += smoothNoise((x / size), (y / size), (z / size)) * size;
-            size /= 2.0;
-        }
-
-        return value / initialSize;
-    }
-
-    public double noise(double x, double y) {
-        double value = 0.0;
-        double size = default_size;
-        double initialSize = size;
-
-        while (size >= 1) {
-            value += smoothNoise((x / size), (y / size), (0f / size)) * size;
-            size /= 2.0;
-        }
-
-        return value / initialSize;
     }
 
     public double noise(double x) {

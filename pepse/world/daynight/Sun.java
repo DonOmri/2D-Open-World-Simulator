@@ -11,6 +11,7 @@ import java.awt.*;
 public class Sun {
 
     private static final float LOCATION_ADJUSTER = 0.5f;
+    private static final float CENTER_ADJUSTER = 0.5f;
     private static final float INITIAL_CYCLE_VALUE = 0f;
     private static final float FINAL_CYCLE_VALUE = 2f; //2*PI radians in a circle
     public static GameObject create(GameObjectCollection gameObjects, int layer, Vector2 windowDimensions,
@@ -28,7 +29,8 @@ public class Sun {
         
         //transitions between sun location
         new Transition<>(sun, rad -> sun.setCenter(new Vector2(
-                (float) (xRadius * (Math.cos((rad + LOCATION_ADJUSTER) * Math.PI) + windowDimensions.x())),
+                (float) (xRadius * (Math.cos((rad + LOCATION_ADJUSTER) * Math.PI)) +
+                        CENTER_ADJUSTER * windowDimensions.x()),
                 (float) -(yRadius * Math.sin((rad + LOCATION_ADJUSTER) * Math.PI)) + windowDimensions.y())),
                 INITIAL_CYCLE_VALUE, FINAL_CYCLE_VALUE, Transition.LINEAR_INTERPOLATOR_FLOAT, cycleLength,
                 Transition.TransitionType.TRANSITION_LOOP,null);

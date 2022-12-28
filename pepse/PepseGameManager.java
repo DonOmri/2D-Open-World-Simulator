@@ -3,7 +3,6 @@ package pepse;
 import danogl.GameManager;
 import danogl.GameObject;
 import danogl.collisions.Layer;
-import danogl.components.Transition;
 import danogl.gui.ImageReader;
 import danogl.gui.SoundReader;
 import danogl.gui.UserInputListener;
@@ -15,10 +14,8 @@ import pepse.world.daynight.Night;
 import pepse.world.daynight.Sun;
 import pepse.world.daynight.SunHalo;
 import pepse.world.trees.Tree;
-
 import java.awt.*;
 import java.util.Random;
-import java.util.function.Consumer;
 
 import static danogl.collisions.Layer.BACKGROUND;
 
@@ -26,6 +23,7 @@ public class PepseGameManager extends GameManager {
     private static final Vector2 WINDOW_DIMENSIONS = new Vector2(1440,900);
     private static final String WINDOW_TITLE = "Pepse";
     private static final int groundLayer = 1;
+    private static final int leafLayer = 3;
     private static final int RANDOM_BOUND = 1000000;
 
     /**
@@ -35,6 +33,7 @@ public class PepseGameManager extends GameManager {
      */
     public PepseGameManager(String windowTitle, Vector2 windowDimensions){
         super(windowTitle, windowDimensions);
+
     }
 
     public static void main(String[] args){
@@ -58,9 +57,11 @@ public class PepseGameManager extends GameManager {
             inputListener, WindowController windowController) {
         super.initializeGame(imageReader, soundReader, inputListener, windowController);
 
+
         Sky.create(gameObjects(), windowController.getWindowDimensions(),BACKGROUND);
         int seed = new Random().nextInt(RANDOM_BOUND);
         System.out.println(seed);
+
 
         Terrain newTerrain = new Terrain(gameObjects(),groundLayer,windowController.getWindowDimensions(),seed);
         newTerrain.createInRange(0,(int) windowController.getWindowDimensions().x());
@@ -68,7 +69,10 @@ public class PepseGameManager extends GameManager {
         GameObject sun = Sun.create(gameObjects(),BACKGROUND+2, windowController.getWindowDimensions(), 60);
         GameObject sunHalo = SunHalo.create(gameObjects(),BACKGROUND+1, sun, new Color(255, 255, 0, 20));
         sunHalo.addComponent(x -> sunHalo.setCenter(sun.getCenter()));
-        Tree newTrees = new Tree(newTerrain, gameObjects(), groundLayer, windowController.getWindowDimensions(),seed);
+        Tree newTrees = new Tree(newTerrain, gameObjects(), leafLayer, windowController.getWindowDimensions(),seed);
         newTrees.createInRange(0,(int) windowController.getWindowDimensions().x());
+
+        gameObjects().layers().shouldLayersCollide(leafLayer, groundLayer, true);
+
     }
 }

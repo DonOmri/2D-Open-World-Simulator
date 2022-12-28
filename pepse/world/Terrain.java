@@ -10,7 +10,6 @@ import java.util.function.Function;
 
 public class Terrain {
     private static final float TERRAIN_ADJUSTER = 2f/3;
-    private static final int MIN_GROUND_HEIGHT = 150;
     private static final Color BASE_GROUND_COLOR = new Color(212, 123, 74);
     private final GameObjectCollection gameObjects;
     private final int groundLayer;
@@ -42,10 +41,17 @@ public class Terrain {
      * @return the terrain height, as a float (return type required by given API)
      */
     public float groundHeightAt(float x){
-        double initialGroundHeight = heightFunc.apply(x); //use perlin noise to determine basic height
-        initialGroundHeight = Math.min(Math.floor(initialGroundHeight / Block.SIZE) * Block.SIZE,
-                windowDimensions.y() - MIN_GROUND_HEIGHT);
-//        initialGroundHeight = Math.max(initialGroundHeight,390);
+        //use perlin noise to determine basic height
+        double initialGroundHeight = Math.floor(heightFunc.apply(x) / Block.SIZE ) * Block.SIZE;
+
+        int upperHeight = (int) (windowDimensions.y() * 0.5f);
+        int lowerHeight = (int) (windowDimensions.y() * 0.9f);
+
+        while(initialGroundHeight < upperHeight || initialGroundHeight > lowerHeight){
+            initialGroundHeight = initialGroundHeight < upperHeight ?
+                    2 * upperHeight - initialGroundHeight : 2 * lowerHeight - initialGroundHeight;
+        }
+
         return (float) initialGroundHeight;
     }
 
@@ -57,7 +63,7 @@ public class Terrain {
     public void createInRange(int minX, int maxX){
 
         for(int x=minX; x<maxX; x += Block.SIZE){
-            int height = (int) groundHeightAt(x); //determine height for current x
+            int height = (int) groundHeightAt(x);
 
             for(int y=height; y< windowDimensions.y(); y+= Block.SIZE){
                 gameObjects.addGameObject(new Block(new Vector2(x,y),

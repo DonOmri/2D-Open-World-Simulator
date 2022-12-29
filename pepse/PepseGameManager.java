@@ -10,13 +10,10 @@ import danogl.gui.WindowController;
 import danogl.util.Vector2;
 import pepse.world.Sky;
 import pepse.world.Terrain;
-import pepse.world.daynight.Night;
-import pepse.world.daynight.Sun;
-import pepse.world.daynight.SunHalo;
+import pepse.world.daynight.*;
 import pepse.world.trees.Tree;
 import java.awt.*;
 import java.util.Random;
-
 import static danogl.collisions.Layer.BACKGROUND;
 
 public class PepseGameManager extends GameManager {
@@ -25,6 +22,10 @@ public class PepseGameManager extends GameManager {
     private static final int groundLayer = 1;
     private static final int leafLayer = 3;
     private static final int RANDOM_BOUND = 1000000;
+    private static final int ASTRONOMICAL_OBJECT_CYCLE_LENGTH = 60;
+    private static final int DAYNIGHT_CYCLE_LENGTH = 30;
+    private static final Color SUN_HALO_COLOR = new Color(255, 255, 0, 20);
+    private static final int X0 = 0;
 
     /**
      * Constructor
@@ -33,7 +34,6 @@ public class PepseGameManager extends GameManager {
      */
     public PepseGameManager(String windowTitle, Vector2 windowDimensions){
         super(windowTitle, windowDimensions);
-
     }
 
     public static void main(String[] args){
@@ -56,23 +56,43 @@ public class PepseGameManager extends GameManager {
     public void initializeGame(ImageReader imageReader, SoundReader soundReader, UserInputListener
             inputListener, WindowController windowController) {
         super.initializeGame(imageReader, soundReader, inputListener, windowController);
-
+        int seed = new Random().nextInt(RANDOM_BOUND); //todo enter this in XX
 
         Sky.create(gameObjects(), windowController.getWindowDimensions(),BACKGROUND);
-        int seed = new Random().nextInt(RANDOM_BOUND);
-        System.out.println(seed);
+        System.out.println(seed); //todo remember to remove
 
-
-        Terrain newTerrain = new Terrain(gameObjects(),groundLayer,windowController.getWindowDimensions(),seed);
-        newTerrain.createInRange(0,(int) windowController.getWindowDimensions().x());
-        Night.create(gameObjects(),windowController.getWindowDimensions(), Layer.FOREGROUND,30);
-        GameObject sun = Sun.create(gameObjects(),BACKGROUND+2, windowController.getWindowDimensions(), 60);
-        GameObject sunHalo = SunHalo.create(gameObjects(),BACKGROUND+1, sun, new Color(255, 255, 0, 20));
-        sunHalo.addComponent(x -> sunHalo.setCenter(sun.getCenter()));
-        Tree newTrees = new Tree(newTerrain, gameObjects(), leafLayer, windowController.getWindowDimensions(),seed);
-        newTrees.createInRange(0,(int) windowController.getWindowDimensions().x());
+        createNonBlocks();
+        createRandomEnvironment(seed); //todo the seed here is XX
 
         gameObjects().layers().shouldLayersCollide(leafLayer, groundLayer, true);
+    }
 
+    /**
+     * Creates all non-block objects: sky, night, sun, sun halo and moon
+     */
+    private void createNonBlocks(){
+        Night.create(gameObjects(), WINDOW_DIMENSIONS, Layer.FOREGROUND, DAYNIGHT_CYCLE_LENGTH);
+
+        GameObject sun = Sun.create(gameObjects(),BACKGROUND + 2, WINDOW_DIMENSIONS,
+                ASTRONOMICAL_OBJECT_CYCLE_LENGTH);
+        GameObject sunHalo = SunHalo.create(gameObjects(),BACKGROUND + 1, sun, SUN_HALO_COLOR);
+        sunHalo.addComponent(x -> sunHalo.setCenter(sun.getCenter()));
+
+        GameObject moon = Moon.create(gameObjects(),BACKGROUND + 2, WINDOW_DIMENSIONS,
+                ASTRONOMICAL_OBJECT_CYCLE_LENGTH);
+    }
+
+    /**
+     * Randomly creates the intractable environment: terrain and trees
+     * @param seed a generated seed to be based on in the generation
+     */
+    private void createRandomEnvironment(int seed){
+        //create terrain
+        Terrain newTerrain = new Terrain(gameObjects(),groundLayer,WINDOW_DIMENSIONS,seed);
+        newTerrain.createInRange(X0, (int) WINDOW_DIMENSIONS.x());
+
+        //create trees
+        Tree newTrees = new Tree(newTerrain, gameObjects(), leafLayer, seed);
+        newTrees.createInRange(X0, (int) WINDOW_DIMENSIONS.x());
     }
 }

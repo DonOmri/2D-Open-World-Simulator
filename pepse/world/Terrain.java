@@ -10,6 +10,8 @@ import java.util.function.Function;
 
 public class Terrain {
     private static final float TERRAIN_ADJUSTER = 2f/3;
+    private static final float UPPER_HEIGHT_ADJUSTER = 0.5f;
+    private static final float LOWER_HEIGHT_ADJUSTER = 0.9f;
     private static final Color BASE_GROUND_COLOR = new Color(212, 123, 74);
     private final GameObjectCollection gameObjects;
     private final int groundLayer;
@@ -26,13 +28,13 @@ public class Terrain {
      * @param seed a random generated seed to randomly create the terrain
      */
     public Terrain(GameObjectCollection gameObjects, int groundLayer, Vector2 windowDimensions, int seed){
-        //todo: in most seeds, this function creates bad surface
         this.gameObjects = gameObjects;
         this.groundLayer = groundLayer;
         this.windowDimensions = windowDimensions;
         this.groundHeightAtX0 = this.windowDimensions.y() * TERRAIN_ADJUSTER;
         this.perlinNoise = new PerlinNoise(seed);
         this.heightFunc = x -> 350 - 1000 * perlinNoise.noise(x/90);
+        //all numbers above are for smoothening purposes and has no real meaning
     }
 
     /**
@@ -41,15 +43,15 @@ public class Terrain {
      * @return the terrain height, as a float (return type required by given API)
      */
     public float groundHeightAt(float x){
-        //use perlin noise to determine basic height
+        //use perlin noise to determine basic height of a given x coordinate
         double initialGroundHeight = Math.floor(heightFunc.apply(x) / Block.SIZE ) * Block.SIZE;
 
-        int upperHeight = (int) (windowDimensions.y() * 0.5f);
-        int lowerHeight = (int) (windowDimensions.y() * 0.9f);
+        int upperHeight = (int) (windowDimensions.y() * UPPER_HEIGHT_ADJUSTER);
+        int lowerHeight = (int) (windowDimensions.y() * LOWER_HEIGHT_ADJUSTER);
 
         while(initialGroundHeight < upperHeight || initialGroundHeight > lowerHeight){
-            initialGroundHeight = initialGroundHeight < upperHeight ?
-                    2 * upperHeight - initialGroundHeight : 2 * lowerHeight - initialGroundHeight;
+            initialGroundHeight = - initialGroundHeight + 2 *
+                    (initialGroundHeight < upperHeight ? upperHeight : lowerHeight);
         }
 
         return (float) initialGroundHeight;

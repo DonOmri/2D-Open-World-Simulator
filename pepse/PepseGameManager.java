@@ -8,6 +8,7 @@ import danogl.gui.SoundReader;
 import danogl.gui.UserInputListener;
 import danogl.gui.WindowController;
 import danogl.util.Vector2;
+import pepse.world.Avatar;
 import pepse.world.Sky;
 import pepse.world.Terrain;
 import pepse.world.daynight.*;
@@ -15,17 +16,19 @@ import pepse.world.trees.Tree;
 import java.awt.*;
 import java.util.Random;
 import static danogl.collisions.Layer.BACKGROUND;
+import static danogl.collisions.Layer.DEFAULT;
 
 public class PepseGameManager extends GameManager {
     private static final Vector2 WINDOW_DIMENSIONS = new Vector2(1440,900);
     private static final String WINDOW_TITLE = "Pepse";
-    private static final int groundLayer = 1;
-    private static final int leafLayer = 3;
+    private static final int GROUND_LAYER = -3;
+    private static final int LEAVES_LAYER = -1;
     private static final int RANDOM_BOUND = 1000000;
     private static final int ASTRONOMICAL_OBJECT_CYCLE_LENGTH = 60;
     private static final int DAYNIGHT_CYCLE_LENGTH = 30;
     private static final Color SUN_HALO_COLOR = new Color(255, 255, 0, 20);
     private static final int X0 = 0;
+    private Terrain gameTerrain;
 
     /**
      * Constructor
@@ -58,27 +61,31 @@ public class PepseGameManager extends GameManager {
         super.initializeGame(imageReader, soundReader, inputListener, windowController);
         int seed = new Random().nextInt(RANDOM_BOUND); //todo enter this in XX
 
-        Sky.create(gameObjects(), windowController.getWindowDimensions(),BACKGROUND);
+
         System.out.println(seed); //todo remember to remove
 
         createNonBlocks();
         createRandomEnvironment(seed); //todo the seed here is XX
 
-        gameObjects().layers().shouldLayersCollide(leafLayer, groundLayer, true);
+        Avatar.create(gameObjects(), DEFAULT, new Vector2(WINDOW_DIMENSIONS.x() * 0.5f, gameTerrain.groundHeightAt(WINDOW_DIMENSIONS.x() * 0.5f) -30f), inputListener, imageReader);
+
+        gameObjects().layers().shouldLayersCollide(LEAVES_LAYER, GROUND_LAYER, true);
+        gameObjects().layers().shouldLayersCollide(DEFAULT, GROUND_LAYER, true);
     }
 
     /**
      * Creates all non-block objects: sky, night, sun, sun halo and moon
      */
     private void createNonBlocks(){
+        Sky.create(gameObjects(), WINDOW_DIMENSIONS, BACKGROUND);
         Night.create(gameObjects(), WINDOW_DIMENSIONS, Layer.FOREGROUND, DAYNIGHT_CYCLE_LENGTH);
 
-        GameObject sun = Sun.create(gameObjects(),BACKGROUND + 2, WINDOW_DIMENSIONS,
+        GameObject sun = Sun.create(gameObjects(),BACKGROUND + 1, WINDOW_DIMENSIONS,
                 ASTRONOMICAL_OBJECT_CYCLE_LENGTH);
-        GameObject sunHalo = SunHalo.create(gameObjects(),BACKGROUND + 1, sun, SUN_HALO_COLOR);
+        GameObject sunHalo = SunHalo.create(gameObjects(),BACKGROUND + 2, sun, SUN_HALO_COLOR);
         sunHalo.addComponent(x -> sunHalo.setCenter(sun.getCenter()));
 
-        GameObject moon = Moon.create(gameObjects(),BACKGROUND + 2, WINDOW_DIMENSIONS,
+        GameObject moon = Moon.create(gameObjects(),BACKGROUND + 1, WINDOW_DIMENSIONS,
                 ASTRONOMICAL_OBJECT_CYCLE_LENGTH);
     }
 
@@ -88,11 +95,11 @@ public class PepseGameManager extends GameManager {
      */
     private void createRandomEnvironment(int seed){
         //create terrain
-        Terrain newTerrain = new Terrain(gameObjects(),groundLayer,WINDOW_DIMENSIONS,seed);
-        newTerrain.createInRange(X0, (int) WINDOW_DIMENSIONS.x());
+        gameTerrain = new Terrain(gameObjects(), GROUND_LAYER, WINDOW_DIMENSIONS, seed);
+        gameTerrain.createInRange(X0, (int) WINDOW_DIMENSIONS.x());
 
         //create trees
-        Tree newTrees = new Tree(newTerrain, gameObjects(), leafLayer, seed);
+        Tree newTrees = new Tree(gameTerrain, gameObjects(), LEAVES_LAYER, seed);
         newTrees.createInRange(X0, (int) WINDOW_DIMENSIONS.x());
     }
 }

@@ -16,7 +16,7 @@ public class Block extends GameObject {
     public Block(Vector2 topLeftCorner, Renderable renderable) {
         super(topLeftCorner, Vector2.ONES.mult(SIZE), renderable);
 
-        physics().preventIntersectionsFromDirection(Vector2.ZERO); //other object cannot pass through this
+        physics().preventIntersectionsFromDirection(Vector2.ZERO); ////other objects can't pass through
         physics().setMass(GameObjectPhysics.IMMOVABLE_MASS);       //on collision, this object won't move
     }
 }

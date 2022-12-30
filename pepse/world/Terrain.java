@@ -9,7 +9,6 @@ import java.awt.*;
 import java.util.function.Function;
 
 public class Terrain {
-    private static final float TERRAIN_ADJUSTER = 2f/3;
     private static final float UPPER_HEIGHT_ADJUSTER = 0.5f;
     private static final float LOWER_HEIGHT_ADJUSTER = 0.9f;
     private static final Color BASE_GROUND_COLOR = new Color(212, 123, 74);
@@ -18,7 +17,6 @@ public class Terrain {
     private final Vector2 windowDimensions;
     private final PerlinNoise perlinNoise;
     private final Function<Float, Double> heightFunc;
-    private float groundHeightAtX0; //todo why do we need that
 
     /**
      * Constructor
@@ -31,7 +29,6 @@ public class Terrain {
         this.gameObjects = gameObjects;
         this.groundLayer = groundLayer;
         this.windowDimensions = windowDimensions;
-        this.groundHeightAtX0 = this.windowDimensions.y() * TERRAIN_ADJUSTER;
         this.perlinNoise = new PerlinNoise(seed);
         this.heightFunc = x -> 350 - 1000 * perlinNoise.noise(x/90);
         //all numbers above are for smoothening purposes and has no real meaning

@@ -28,4 +28,8 @@ public class Sky {
 
         return sky;
     }
+
+    public static Color getColor(){
+        return BASIC_SKY_COLOR;
+    }
 }

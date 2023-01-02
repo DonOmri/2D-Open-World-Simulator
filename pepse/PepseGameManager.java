@@ -7,6 +7,7 @@ import danogl.gui.ImageReader;
 import danogl.gui.SoundReader;
 import danogl.gui.UserInputListener;
 import danogl.gui.WindowController;
+import danogl.gui.rendering.TextRenderable;
 import danogl.util.Vector2;
 import pepse.world.Avatar;
 import pepse.world.Sky;
@@ -71,6 +72,7 @@ public class PepseGameManager extends GameManager {
 
         gameObjects().layers().shouldLayersCollide(LEAVES_LAYER, GROUND_LAYER, true);
         gameObjects().layers().shouldLayersCollide(DEFAULT, GROUND_LAYER, true);
+        gameObjects().layers().shouldLayersCollide(DEFAULT, LEAVES_LAYER - 1, true);
     }
 
     /**

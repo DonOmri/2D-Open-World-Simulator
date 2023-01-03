@@ -7,9 +7,9 @@ import danogl.gui.ImageReader;
 import danogl.gui.SoundReader;
 import danogl.gui.UserInputListener;
 import danogl.gui.WindowController;
-import danogl.gui.rendering.TextRenderable;
 import danogl.util.Vector2;
 import pepse.world.Avatar;
+import pepse.world.Block;
 import pepse.world.Sky;
 import pepse.world.Terrain;
 import pepse.world.daynight.*;
@@ -29,7 +29,9 @@ public class PepseGameManager extends GameManager {
     private static final int DAYNIGHT_CYCLE_LENGTH = 30;
     private static final Color SUN_HALO_COLOR = new Color(255, 255, 0, 20);
     private static final int X0 = 0;
+    private static final int DEFAULT_TREE = 120;
     private Terrain gameTerrain;
+    private static final float avatarInitialXLocation = WINDOW_DIMENSIONS.x() * 0.5f;
 
     /**
      * Constructor
@@ -61,14 +63,14 @@ public class PepseGameManager extends GameManager {
             inputListener, WindowController windowController) {
         super.initializeGame(imageReader, soundReader, inputListener, windowController);
         int seed = new Random().nextInt(RANDOM_BOUND); //todo enter this in XX
-
-
         System.out.println(seed); //todo remember to remove
 
+//        int seed = 139911; //problem with spawning avatar inside terrain?
         createNonBlocks();
         createRandomEnvironment(seed); //todo the seed here is XX
 
-        Avatar.create(gameObjects(), DEFAULT, new Vector2(WINDOW_DIMENSIONS.x() * 0.5f, gameTerrain.groundHeightAt(WINDOW_DIMENSIONS.x() * 0.5f) -30f), inputListener, imageReader);
+        Avatar.create(gameObjects(), DEFAULT, new Vector2(avatarInitialXLocation,
+                gameTerrain.groundHeightAt(WINDOW_DIMENSIONS.x() * 0.5f)), inputListener, imageReader);
 
         gameObjects().layers().shouldLayersCollide(LEAVES_LAYER, GROUND_LAYER, true);
         gameObjects().layers().shouldLayersCollide(DEFAULT, GROUND_LAYER, true);
@@ -89,7 +91,7 @@ public class PepseGameManager extends GameManager {
 
         GameObject moon = Moon.create(gameObjects(),BACKGROUND + 1, WINDOW_DIMENSIONS,
                 ASTRONOMICAL_OBJECT_CYCLE_LENGTH);
-    }
+     }
 
     /**
      * Randomly creates the intractable environment: terrain and trees
@@ -101,7 +103,10 @@ public class PepseGameManager extends GameManager {
         gameTerrain.createInRange(X0, (int) WINDOW_DIMENSIONS.x());
 
         //create trees
-        Tree newTrees = new Tree(gameTerrain, gameObjects(), LEAVES_LAYER, seed);
+        Tree newTrees = new Tree(gameTerrain, gameObjects(), LEAVES_LAYER, seed, new float[] {avatarInitialXLocation - 3 * Block.SIZE, avatarInitialXLocation + 4 * Block.SIZE});
         newTrees.createInRange(X0, (int) WINDOW_DIMENSIONS.x());
+        if(!newTrees.treesInGame()){
+            newTrees.spawnTree(DEFAULT_TREE);
+        }
     }
 }

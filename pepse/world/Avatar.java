@@ -2,9 +2,11 @@ package pepse.world;
 
 import danogl.GameObject;
 import danogl.collisions.GameObjectCollection;
+import danogl.components.ScheduledTask;
 import danogl.components.Transition;
 import danogl.gui.ImageReader;
 import danogl.gui.UserInputListener;
+import danogl.gui.rendering.AnimationRenderable;
 import danogl.gui.rendering.RectangleRenderable;
 import danogl.gui.rendering.Renderable;
 import danogl.gui.rendering.TextRenderable;
@@ -18,22 +20,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class Avatar extends GameObject{
-    private static final Vector2 AVATAR_DIMENSIONS = new Vector2(30, 50); //todo temporary
     private static final HashMap<String, Renderable> AVATAR_RENDERABLE = new HashMap<>();
+    private static final Vector2 AVATAR_DIMENSIONS = new Vector2(45, 60);
     private static final float MOVE_SPEED = 250;
-    private static final Renderable TEMP = new RectangleRenderable(Color.MAGENTA);
-    private static UserInputListener inputListener;
-    private static final Vector2 BASIC_GRAVITY = Vector2.DOWN;
-    private boolean isJumping;
-    private float lastY;
-    private Transition<Float> jump;
-    private static final float JUMP_HEIGHT = -(6 * Block.SIZE);
-    private static float flyEnergy = 100;
+    private static final float FLYING_SPEED = 3f;
+    private static final float JUMPING_SPEED = 2.5f;
+    private static final int NO_FLY_ENERGY = 0;
     private static final float MAX_ENERGY = 100;
     private static final float ENERGY_CHANGE = 0.5f;
-
-    private static GameObject energyText;
+    private static final Vector2 BASIC_GRAVITY = Vector2.DOWN;
+    private static float flyEnergy = 100;
+    private static UserInputListener inputListener;
     private static TextRenderable textRenderable;
+    private boolean isJumping;
+    private float lastY;
 
     /**
      * Construct a new GameObject instance.
@@ -54,14 +54,26 @@ public class Avatar extends GameObject{
                                 UserInputListener inputListener, ImageReader imageReader){
         Avatar.inputListener = inputListener;
 
-        Avatar avatar = new Avatar(topLeftCorner, AVATAR_DIMENSIONS, TEMP);
+        Renderable[] clips = new Renderable[4];
+        for (int i = 0; i < clips.length; i++) {
+            clips[i] = imageReader.readImage("pepse/assets/HeroStand"+ i + ".png",true);
+        }
+        AnimationRenderable avatarStand = new AnimationRenderable(clips, 0.2f);
+
+
+
+//        AnimationRenderable avatarWalk = imageReader.readImage(,true);
+//        AnimationRenderable avatarJump = imageReader.readImage(,true);
+//        AnimationRenderable avatarDive = imageReader.readImage(,true);
+
+
+        Avatar avatar = new Avatar(topLeftCorner.subtract(new Vector2(0, AVATAR_DIMENSIONS.y())), AVATAR_DIMENSIONS, avatarStand);
         gameObjects.addGameObject(avatar, layer);
 
-
-        textRenderable = new TextRenderable(flyEnergy + "");
+        textRenderable = new TextRenderable("Energy\n" + flyEnergy);
         textRenderable.setColor(Color.BLACK);
 
-        energyText = new GameObject(Vector2.ZERO, new Vector2(100, 100), textRenderable);
+        GameObject energyText = new GameObject(Vector2.ZERO, new Vector2(100, 100), textRenderable);
         energyText.renderer().setRenderable(textRenderable);
         gameObjects.addGameObject(energyText);
 
@@ -81,50 +93,54 @@ public class Avatar extends GameObject{
     public void update(float deltaTime) {
         super.update(deltaTime);
 
-        //get user input and update avatar movement accordingly
+        //get user input and jumping indication, and update avatar movement accordingly
         Vector2 movementDir = checkInput().add(BASIC_GRAVITY);
+        if (isJumping) movementDir = movementDir.add(Vector2.UP.mult(JUMPING_SPEED));
         setVelocity(movementDir.mult(MOVE_SPEED));
 
         //if y coordinate stays still for 2 frames in a row, user is not jumping
-        if(this.getCenter().y() == lastY) {
-            isJumping = false;
-            flyEnergy = Math.min(flyEnergy + ENERGY_CHANGE, MAX_ENERGY);
-        }
+        if(this.getCenter().y() == lastY) flyEnergy = Math.min(flyEnergy + ENERGY_CHANGE, MAX_ENERGY);
+        textRenderable.setString("Energy\n" + flyEnergy);
 
-        lastY = this.getCenter().y(); //update the last frame to contain this frame's y coordinate
-        textRenderable.setString(flyEnergy + "");
+        lastY = this.getCenter().y();
     }
 
     /**
      * Handles user input
      * @return the vector in which the avatar should move
      */
-    private Vector2 checkInput(){ //todo jumping mechanism is not accurate
+    private Vector2 checkInput(){
         Vector2 movementDir = Vector2.ZERO;
-        if (inputListener.isKeyPressed(KeyEvent.VK_LEFT)) movementDir = Vector2.LEFT;
-        if (inputListener.isKeyPressed(KeyEvent.VK_RIGHT)) movementDir = Vector2.RIGHT;
-        if (inputListener.isKeyPressed(KeyEvent.VK_SPACE)) {
-            if (inputListener.isKeyPressed(KeyEvent.VK_SHIFT)) {
-                if (flyEnergy > 0) {
-                    movementDir = Vector2.UP.mult(3);
-                    flyEnergy -= ENERGY_CHANGE;
-                    System.out.println(flyEnergy);
-                }
-            }
-            else if (!isJumping) { //jump only if user not jumping already
-                isJumping = true; //disable jump until you land back
-                System.out.println("jump you stupid");
-                //jumping will not be calculated by movementDir - instead, it uses Transition that alters
-                // avatar's center, as it looks smoother. at end of transition, it'll be deleted
-                jump = new Transition<>(this, (y) -> this.setCenter(new Vector2(this.getCenter().x(), y)),
-                        lastY, lastY + JUMP_HEIGHT, Transition.LINEAR_INTERPOLATOR_FLOAT, 0.3f,
-                        Transition.TransitionType.TRANSITION_ONCE, () -> this.removeComponent(jump));
 
-                //todo interpolator should be sin(k*x), whereas 2<k<10
+        if (inputListener.isKeyPressed(KeyEvent.VK_LEFT)) {
+            movementDir = Vector2.LEFT;
+            renderer().setIsFlippedHorizontally(true);
+        }
+        if (inputListener.isKeyPressed(KeyEvent.VK_RIGHT)) {
+            movementDir = Vector2.RIGHT;
+            renderer().setIsFlippedHorizontally(false);
+        }
+        if (inputListener.isKeyPressed(KeyEvent.VK_SPACE)) {
+            if (inputListener.isKeyPressed(KeyEvent.VK_SHIFT)) movementDir = fly(movementDir);
+            else if (this.getCenter().y() == lastY) {
+                isJumping = true;
+                new ScheduledTask(this, 0.7f, false, () -> isJumping = false);
             }
         }
 
-
         return movementDir;
+    }
+
+    /**
+     * a function that makes the avatar fly.
+     * @param dir the current movement direction of the avatar.
+     * @return a new movement direction of flight according to whether or not the avatar is jumping.
+     */
+    private Vector2 fly(Vector2 dir) {
+        if (flyEnergy > NO_FLY_ENERGY) {
+            dir = dir.add(Vector2.UP.mult(isJumping? FLYING_SPEED - JUMPING_SPEED : FLYING_SPEED));
+            flyEnergy -= ENERGY_CHANGE;
+        }
+        return dir;
     }
 }

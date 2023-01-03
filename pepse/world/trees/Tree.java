@@ -18,13 +18,17 @@ public class Tree {
     private static final int LOG_MINIMUM_SIZE = 7;
     private static final int CREATE_TREE = 0;
     private static final float LEAVES_MATRIX_ADJUSTER = 2/3f;
-    private final int logLayer;
-    private final int leafLayer;
+    private static final int MIN = 0;
+    private static final int MAX = 1;
     private static final Color BASE_WOOD_COLOR = new Color(100, 50, 20);
     private static final Color BASE_LEAF_COLOR = new Color(50, 200, 30);
+    private final int logLayer;
+    private final int leafLayer;
     private final Terrain terrain;
     private final GameObjectCollection gameObjects;
     private final Random random;
+    private final float[] avatarRange;
+    private boolean spawnTree;
 
     /**
      * Constructor
@@ -33,12 +37,13 @@ public class Tree {
      * @param leafLayer the layer in which to add the leaves
      * @param seed the random seed used to create the terrain
      */
-    public Tree(Terrain terrain, GameObjectCollection gameObjects, int leafLayer, int seed) {
+    public Tree(Terrain terrain, GameObjectCollection gameObjects, int leafLayer, int seed, float[] avatarRange) {
         this.terrain = terrain;
         this.gameObjects = gameObjects;
         this.logLayer = leafLayer - 1;
         this.leafLayer = leafLayer;
         this.random = new Random(seed);
+        this.avatarRange = avatarRange;
     }
 
     /**
@@ -48,14 +53,20 @@ public class Tree {
      */
     public void createInRange(int minX, int maxX) {
         for (int x = minX ; x < maxX; x += Block.SIZE){
-            if (random.nextInt(SPAWN_TREE_BOUND) == CREATE_TREE){
-                int groundHeight = (int) terrain.groundHeightAt(x);
-                int blocksInLog = random.nextInt(LOG_ARBITRARY_SIZE) + LOG_MINIMUM_SIZE;
-
-                createLog(x, groundHeight, blocksInLog);
-                createLeaves(x,groundHeight - blocksInLog * Block.SIZE, blocksInLog);
+            if (random.nextInt(SPAWN_TREE_BOUND) == CREATE_TREE &&
+                    !(avatarRange[MIN] <= x && x <= avatarRange[MAX])){
+                spawnTree(x);
+                spawnTree = true;
             }
         }
+    }
+
+    public void spawnTree(int x) {
+        int groundHeight = (int) terrain.groundHeightAt(x);
+        int blocksInLog = random.nextInt(LOG_ARBITRARY_SIZE) + LOG_MINIMUM_SIZE;
+
+        createLog(x, groundHeight, blocksInLog);
+        createLeaves(x,groundHeight - blocksInLog * Block.SIZE, blocksInLog);
     }
 
     /**
@@ -102,6 +113,10 @@ public class Tree {
                             leafLayer);
             }
         }
+    }
+
+    public boolean treesInGame(){
+        return spawnTree;
     }
 }
 

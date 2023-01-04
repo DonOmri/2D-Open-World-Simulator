@@ -2,25 +2,17 @@ package pepse.world;
 
 import danogl.GameObject;
 import danogl.collisions.GameObjectCollection;
+import danogl.collisions.Layer;
 import danogl.components.ScheduledTask;
 import danogl.components.Transition;
 import danogl.gui.ImageReader;
 import danogl.gui.UserInputListener;
-import danogl.gui.rendering.AnimationRenderable;
-import danogl.gui.rendering.RectangleRenderable;
-import danogl.gui.rendering.Renderable;
-import danogl.gui.rendering.TextRenderable;
+import danogl.gui.rendering.*;
 import danogl.util.Vector2;
-import pepse.PepseGameManager;
-
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.sql.SQLOutput;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class Avatar extends GameObject{
-    private static final HashMap<String, Renderable> AVATAR_RENDERABLE = new HashMap<>();
     private static final Vector2 AVATAR_DIMENSIONS = new Vector2(45, 60);
     private static final float MOVE_SPEED = 250;
     private static final float FLYING_SPEED = 3f;
@@ -28,12 +20,18 @@ public class Avatar extends GameObject{
     private static final int NO_FLY_ENERGY = 0;
     private static final float MAX_ENERGY = 100;
     private static final float ENERGY_CHANGE = 0.5f;
+    private static final float TIME_BETWEEN_CLIPS = 0.2f;
+    private static final String ASSETS_PATH = "pepse/assets";
     private static final Vector2 BASIC_GRAVITY = Vector2.DOWN;
     private static float flyEnergy = 100;
     private static UserInputListener inputListener;
+    private static GameObjectCollection gameObjects;
     private static TextRenderable textRenderable;
+    private static AnimationRenderable avatarStand, avatarJump, avatarWalk, avatarFly;
+    private static Renderable avatarFall, avatarParachute;
+    private static GameObject parachute = null;
     private boolean isJumping;
-    private float lastY;
+    private Vector2 lastPosition = Vector2.ZERO;
 
     /**
      * Construct a new GameObject instance.
@@ -53,19 +51,15 @@ public class Avatar extends GameObject{
     public static Avatar create(GameObjectCollection gameObjects, int layer, Vector2 topLeftCorner,
                                 UserInputListener inputListener, ImageReader imageReader){
         Avatar.inputListener = inputListener;
+        Avatar.gameObjects = gameObjects;
 
-        Renderable[] clips = new Renderable[4];
-        for (int i = 0; i < clips.length; i++) {
-            clips[i] = imageReader.readImage("pepse/assets/HeroStand"+ i + ".png",true);
-        }
-        AnimationRenderable avatarStand = new AnimationRenderable(clips, 0.2f);
+        avatarStand = createAvatarAnimation(imageReader, 4, "Stand");
+        avatarJump = createAvatarAnimation(imageReader, 4, "Jump");
+        avatarWalk = createAvatarAnimation(imageReader, 6, "Walk");
+        avatarFly = createAvatarAnimation(imageReader, 0, "Fall");
 
-
-
-//        AnimationRenderable avatarWalk = imageReader.readImage(,true);
-//        AnimationRenderable avatarJump = imageReader.readImage(,true);
-//        AnimationRenderable avatarDive = imageReader.readImage(,true);
-
+        avatarFall = imageReader.readImage(ASSETS_PATH + "/HeroFall.png", true);
+        avatarParachute = imageReader.readImage(ASSETS_PATH + "/HeroParachute.png", true);
 
         Avatar avatar = new Avatar(topLeftCorner.subtract(new Vector2(0, AVATAR_DIMENSIONS.y())), AVATAR_DIMENSIONS, avatarStand);
         gameObjects.addGameObject(avatar, layer);
@@ -78,6 +72,15 @@ public class Avatar extends GameObject{
         gameObjects.addGameObject(energyText);
 
         return avatar;
+    }
+
+    private static AnimationRenderable createAvatarAnimation(ImageReader imageReader, int clipsNum, String type){
+        Renderable[] clips = new Renderable[clipsNum];
+        for (int i = 0; i < clips.length; i++) {
+            clips[i] = imageReader.readImage(ASSETS_PATH + "/Hero" + type + i + ".png",true);
+        }
+
+        return new AnimationRenderable(clips, TIME_BETWEEN_CLIPS);
     }
 
     /**
@@ -93,16 +96,35 @@ public class Avatar extends GameObject{
     public void update(float deltaTime) {
         super.update(deltaTime);
 
-        //get user input and jumping indication, and update avatar movement accordingly
-        Vector2 movementDir = checkInput().add(BASIC_GRAVITY);
+        Vector2 movementDir = checkInput();
+
+        if (this.getCenter().y() == lastPosition.y()){ //either stand or walk
+            flyEnergy = Math.min(flyEnergy + ENERGY_CHANGE, MAX_ENERGY);
+
+            renderer().setRenderable(this.getCenter().x() == lastPosition.x() ? avatarStand : avatarWalk);
+
+            if (parachute != null) gameObjects.removeGameObject(parachute, Layer.DEFAULT -1);
+        }
+
         if (isJumping) movementDir = movementDir.add(Vector2.UP.mult(JUMPING_SPEED));
+        else movementDir = movementDir.add(BASIC_GRAVITY);
+
+        if (this.getCenter().y() > lastPosition.y()) {
+            movementDir = movementDir.add(BASIC_GRAVITY);
+            if(renderer().getRenderable() != avatarFall) {
+                renderer().setRenderable(avatarFall);
+
+                parachute = new GameObject(this.getTopLeftCorner().add(new Vector2(-9, -45)),Vector2.ONES.mult(60), avatarParachute);
+                gameObjects.addGameObject(parachute, Layer.DEFAULT - 1);
+            }
+        }
+        else if (this.getCenter().y() < lastPosition.y()) renderer().setRenderable(avatarJump);
+
+        if(parachute != null) parachute.setTopLeftCorner(this.getTopLeftCorner().add(new Vector2(-9, -45)));
         setVelocity(movementDir.mult(MOVE_SPEED));
 
-        //if y coordinate stays still for 2 frames in a row, user is not jumping
-        if(this.getCenter().y() == lastY) flyEnergy = Math.min(flyEnergy + ENERGY_CHANGE, MAX_ENERGY);
+        lastPosition = this.getCenter();
         textRenderable.setString("Energy\n" + flyEnergy);
-
-        lastY = this.getCenter().y();
     }
 
     /**
@@ -122,7 +144,7 @@ public class Avatar extends GameObject{
         }
         if (inputListener.isKeyPressed(KeyEvent.VK_SPACE)) {
             if (inputListener.isKeyPressed(KeyEvent.VK_SHIFT)) movementDir = fly(movementDir);
-            else if (this.getCenter().y() == lastY) {
+            else if (this.getCenter().y() == lastPosition.y()) {
                 isJumping = true;
                 new ScheduledTask(this, 0.7f, false, () -> isJumping = false);
             }

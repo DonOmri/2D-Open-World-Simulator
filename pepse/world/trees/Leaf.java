@@ -8,7 +8,6 @@ import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
 import pepse.world.Block;
 import java.util.Random;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class Leaf extends Block {
@@ -61,8 +60,10 @@ public class Leaf extends Block {
         this.renderer().setOpaqueness(OPAQUE);
 
         //2. animate leaf in-place
-        new ScheduledTask(this, random.nextFloat(START_ROTATION_BOUND), false, this::rotateLeaf);
-        new ScheduledTask(this, random.nextFloat(START_CHANGE_SIZE_BOUND), false, this::changeLeafSize);
+        new ScheduledTask(this, random.nextFloat(START_ROTATION_BOUND),
+                false, this::rotateLeaf);
+        new ScheduledTask(this, random.nextFloat(START_CHANGE_SIZE_BOUND), false,
+                this::changeLeafSize);
 
         //3. drop leaf, remove it and eventually bring it back to stage 1
         float arbitrary = random.nextFloat(MIN_TIME_ON_TREE,MAX_TIME_ON_TREE);
@@ -96,8 +97,8 @@ public class Leaf extends Block {
     private void dropLeaf(){
         this.renderer().fadeOut(FADEOUT_TIME);
         this.transform().setVelocityY(LEAF_DOWNFALL_SPEED);
-        moveLeafVertically = new Transition<>(this, x -> this.transform().setCenter(x, this.getCenter().y()),
-                this.getCenter().x(),this.getCenter().x() + leafMoveDirection.get(),
+        moveLeafVertically = new Transition<>(this, x -> this.transform().setCenter(x,
+                this.getCenter().y()), this.getCenter().x(),this.getCenter().x() + leafMoveDirection.get(),
                 Transition.LINEAR_INTERPOLATOR_FLOAT, MOVE_VERTICALLY_TIME,
                 Transition.TransitionType.TRANSITION_BACK_AND_FORTH,null);
     }

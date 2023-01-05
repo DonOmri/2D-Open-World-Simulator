@@ -8,7 +8,7 @@ import pepse.util.PerlinNoise;
 import java.awt.*;
 import java.util.function.Function;
 
-public class Terrain {
+public class  Terrain {
     private static final float UPPER_HEIGHT_ADJUSTER = 0.5f;
     private static final float LOWER_HEIGHT_ADJUSTER = 0.9f;
     private static final Color BASE_GROUND_COLOR = new Color(212, 123, 74);
@@ -64,10 +64,10 @@ public class Terrain {
         for(int x=minX; x<maxX; x += Block.SIZE){
             int height = (int) groundHeightAt(x);
 
-            for(int y=height; y< windowDimensions.y(); y+= Block.SIZE){
-                gameObjects.addGameObject(new Block(new Vector2(x,y),
-                        new RectangleRenderable(ColorSupplier.approximateColor(BASE_GROUND_COLOR))),
-                        groundLayer);
+            for(int y=height; y< windowDimensions.y() + Block.SIZE * 10; y+= Block.SIZE){
+                Block block = new Block(new Vector2(x,y),
+                        new RectangleRenderable(ColorSupplier.approximateColor(BASE_GROUND_COLOR)));
+                gameObjects.addGameObject(block, groundLayer);
             }
         }
     }

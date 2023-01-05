@@ -37,7 +37,8 @@ public class Tree {
      * @param leafLayer the layer in which to add the leaves
      * @param seed the random seed used to create the terrain
      */
-    public Tree(Terrain terrain, GameObjectCollection gameObjects, int leafLayer, int seed, float[] avatarRange) {
+    public Tree(Terrain terrain, GameObjectCollection gameObjects, int leafLayer, int seed,
+                float[] avatarRange) {
         this.terrain = terrain;
         this.gameObjects = gameObjects;
         this.logLayer = leafLayer - 1;

@@ -1,7 +1,5 @@
 package pepse.util;
 
-import java.util.Random;
-
 public class PerlinNoise {
     private double seed;
     private long default_size;
@@ -13,11 +11,10 @@ public class PerlinNoise {
         init();
     }
 
-    public PerlinNoise() {
-        this.seed = new Random().nextGaussian() * 255;
-        init();
-    }
 
+    /**
+     * initializes the permutation array.
+     */
     private void init() {
         // Initialize the permutation array.
         this.p = new int[512];
@@ -49,6 +46,12 @@ public class PerlinNoise {
         }
     }
 
+    /**
+     * Generates Perlin noise for the given x coordinate.
+     * @param x the x coordinate
+     * @return the Perlin noise at the given coordinate
+     */
+
     public double noise(double x) {
         double value = 0.0;
         double size = default_size;
@@ -62,6 +65,14 @@ public class PerlinNoise {
         return value / initialSize;
     }
 
+    /**
+     * Generates smooth Perlin noise for the given coordinates.
+     *
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @param z the z coordinate
+     * @return the smooth Perlin noise at the given coordinates
+     */
     public double smoothNoise(double x, double y, double z) {
         // Offset each coordinate by the seed value
         x += this.seed;
@@ -97,14 +108,37 @@ public class PerlinNoise {
                                 grad(p[BB + 1], x - 1, 	y - 1, 	z - 1	))));
     }
 
+    /**
+     * Calculates the fade curve value for a given input value.
+     *
+     * @param t input value
+     * @return fade curve value for the input
+     */
     private double fade(double t) {
         return t * t * t * (t * (t * 6 - 15) + 10);
     }
 
+    /**
+     * Performs linear interpolation between two values.
+     *
+     * @param t interpolation factor
+     * @param a first value
+     * @param b second value
+     * @return the interpolated value
+     */
     private double lerp(double t, double a, double b) {
         return a + t * (b - a);
     }
 
+    /**
+     * Calculates the gradient value for a given hash, input values, and coordinate.
+     *
+     * @param hash hash value
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param z z coordinate
+     * @return gradient value for the input
+     */
     private double grad(int hash, double x, double y, double z) {
         int h = hash & 15; // CONVERT LO 4 BITS OF HASH CODE
         double u = h < 8 ? x : y, // INTO 12 GRADIENT DIRECTIONS.

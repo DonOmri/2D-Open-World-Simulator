@@ -9,7 +9,7 @@ import danogl.util.Vector2;
 import pepse.world.Sky;
 import java.awt.*;
 
-public class Moon { //todo should sun and moon extend a basic planetary object?
+public class Moon {
     private static final float SIZE_ADJUSTER = 0.15f;
     private static final float INITIAL_LOCATION_X_ADJUSTER = 0.5f;
     private static final float INITIAL_LOCATION_Y_ADJUSTER = 1.9f;

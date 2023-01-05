@@ -8,12 +8,13 @@ import pepse.util.PerlinNoise;
 import java.awt.*;
 import java.util.function.Function;
 
-public class  Terrain {
+public class Terrain {
     private static final float UPPER_HEIGHT_ADJUSTER = 0.5f;
     private static final float LOWER_HEIGHT_ADJUSTER = 0.9f;
     private static final Color BASE_GROUND_COLOR = new Color(212, 123, 74);
     private final GameObjectCollection gameObjects;
     private final int groundLayer;
+    private final int leafCatcherLayer;
     private final Vector2 windowDimensions;
     private final PerlinNoise perlinNoise;
     private final Function<Float, Double> heightFunc;
@@ -28,6 +29,7 @@ public class  Terrain {
     public Terrain(GameObjectCollection gameObjects, int groundLayer, Vector2 windowDimensions, int seed){
         this.gameObjects = gameObjects;
         this.groundLayer = groundLayer;
+        this.leafCatcherLayer = groundLayer -1;
         this.windowDimensions = windowDimensions;
         this.perlinNoise = new PerlinNoise(seed);
         this.heightFunc = x -> 350 - 1000 * perlinNoise.noise(x/90);
@@ -64,7 +66,12 @@ public class  Terrain {
         for(int x=minX; x<maxX; x += Block.SIZE){
             int height = (int) groundHeightAt(x);
 
-            for(int y=height; y< windowDimensions.y() + Block.SIZE * 10; y+= Block.SIZE){
+            gameObjects.addGameObject(new Block(new Vector2(x,height),
+                    new RectangleRenderable(ColorSupplier.approximateColor(BASE_GROUND_COLOR))), leafCatcherLayer);
+            gameObjects.addGameObject(new Block(new Vector2(x,height + Block.SIZE),
+                    new RectangleRenderable(ColorSupplier.approximateColor(BASE_GROUND_COLOR))), leafCatcherLayer);
+
+            for(int y=height + Block.SIZE * 2; y< windowDimensions.y() + Block.SIZE * 10; y+= Block.SIZE){
                 Block block = new Block(new Vector2(x,y),
                         new RectangleRenderable(ColorSupplier.approximateColor(BASE_GROUND_COLOR)));
                 gameObjects.addGameObject(block, groundLayer);

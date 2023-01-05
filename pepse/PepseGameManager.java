@@ -76,8 +76,8 @@ public class PepseGameManager extends GameManager {
         setCamera(new Camera(avatar, WINDOW_DIMENSIONS.mult(0.5f).subtract(avatar.getCenter()),
                 WINDOW_DIMENSIONS, WINDOW_DIMENSIONS));
 
-        gameObjects().layers().shouldLayersCollide(LEAVES_LAYER, GROUND_LAYER, true);
-        gameObjects().layers().shouldLayersCollide(DEFAULT, GROUND_LAYER, true);
+        gameObjects().layers().shouldLayersCollide(LEAVES_LAYER, GROUND_LAYER - 1, true);
+        gameObjects().layers().shouldLayersCollide(DEFAULT, GROUND_LAYER - 1, true);
         gameObjects().layers().shouldLayersCollide(DEFAULT, LEAVES_LAYER - 1, true);
     }
 
@@ -160,5 +160,9 @@ public class PepseGameManager extends GameManager {
                 }
             }
         }
+    }
+
+    public static int getLeavesLayer() {
+        return LEAVES_LAYER;
     }
 }
